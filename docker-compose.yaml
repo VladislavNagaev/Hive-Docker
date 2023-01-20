@@ -1,0 +1,44 @@
+---
+version: "3.8"
+
+x-networks: &networks
+  - main-overlay-network
+
+x-hive-common:
+  &hive-common
+  image: hive-base:4.0.0-alpha-2
+  # build:
+  #   context: .
+  #   dockerfile: base.Dockerfile
+  networks: *networks
+  env_file:
+    - ./hadoop.env
+    - ./hive.env
+
+services:
+  
+  hive-server:
+    <<: *hive-common
+    container_name: hive-server
+    command: hiveserver
+    environment:
+      SERVICE_PRECONDITION: "hive-metastore:9083"
+    ports:
+      - target: 10000
+        published: 10000
+        mode: host
+  
+  hive-metastore:
+    <<: *hive-common
+    container_name: hive-metastore
+    command: metastore
+    ports:
+      - target: 9083
+        published: 9083
+        mode: host
+
+networks:
+  main-overlay-network:
+    external: true
+    driver: overlay
+    attachable: true
